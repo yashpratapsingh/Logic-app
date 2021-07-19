@@ -1,19 +1,39 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- main
+  branches:
+    include:
+    - development
+    
+  paths:
+    exclude:
+    - README.md
+variables:
+  GIT_COMMIT: $(Build.SourceVersion)
+  GIT_BRANCH: $(Build.SourceBranchName)
 
 pool:
-  vmImage: ubuntu-latest
+  name: Default
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+stages:
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- stage: Publish
+  displayName: Download and Publish
+
+  jobs:
+    - job: PublishdJob
+      displayName: Download and Publish Artifacts
+      pool:
+        name: Default
+
+      steps:
+        - task: CopyFiles@2
+          displayName: Copy files
+          inputs:
+            SourceFolder: '$(Build.SourcesDirectory)'
+            Contents: '**.json'
+            TargetFolder: '$(Build.ArtifactStagingDirectory)'
+            CleanTargetFolder: true
+            preserveTimestamp: true
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathToPublish: '$(Build.ArtifactStagingDirectory)'
+            artifactName: Demo-pipeline
